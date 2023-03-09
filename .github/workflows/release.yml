@@ -1,0 +1,37 @@
+---
+name: Release pushed tags 
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: TEST
+        run: |
+            whereis git
+            whereis curl
+
+      - name: Install asdf
+        run: |
+            git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.11.2
+            echo ". '$HOME/.asdf/asdf.sh'" >> ~/.bashrc
+            echo ". '$HOME/.asdf/completions/asdf.bash'" >> ~/.bashrc
+            source ~/.bashrc
+
+      - name: Install Github CLI
+        run: |
+          asdf plugin-add github-cli https://github.com/bartlomiejdanek/asdf-github-cli.git
+          echo "github-cli 2.20.2" >> ~/.tool-versions
+          asdf plugin install
+
+      - name: Test
+        run: gh release create -m "${{ github.ref_name }}" "$(date +%Y%m%d%H%M%S)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
